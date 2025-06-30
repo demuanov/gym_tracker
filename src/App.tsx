@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Dumbbell, Plus, Calendar, List, Target } from 'lucide-react';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import { Exercise, TrainingPlan } from './types';
+import { Dumbbell, Plus, Calendar, List, Target, LogOut } from 'lucide-react';
+import { useAuth } from './hooks/useAuth';
+import { useExercises } from './hooks/useExercises';
+import { TrainingPlan } from './types';
+import AuthForm from './components/AuthForm';
 import ExerciseForm from './components/ExerciseForm';
 import ExerciseCard from './components/ExerciseCard';
 import TrainingPlanForm from './components/TrainingPlanForm';
@@ -10,32 +12,36 @@ import TrainingPlanView from './components/TrainingPlanView';
 type View = 'exercises' | 'plans' | 'current-plan';
 
 function App() {
-  const [exercises, setExercises] = useLocalStorage<Exercise[]>('gym-exercises', []);
-  const [trainingPlans, setTrainingPlans] = useLocalStorage<TrainingPlan[]>('training-plans', []);
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { exercises, loading: exercisesLoading, addExercise, toggleExerciseComplete, deleteExercise } = useExercises();
+  const [trainingPlans, setTrainingPlans] = useState<TrainingPlan[]>([]);
   const [currentView, setCurrentView] = useState<View>('exercises');
   const [showExerciseForm, setShowExerciseForm] = useState(false);
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<TrainingPlan | null>(null);
 
-  const addExercise = (exerciseData: Omit<Exercise, 'id' | 'completed' | 'createdAt'>) => {
-    const newExercise: Exercise = {
-      ...exerciseData,
-      id: Date.now().toString(),
-      completed: false,
-      createdAt: new Date()
-    };
-    setExercises([...exercises, newExercise]);
-    setShowExerciseForm(false);
-  };
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Dumbbell className="mx-auto text-primary-600 mb-4 animate-pulse" size={48} />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const toggleExerciseComplete = (id: string) => {
-    setExercises(exercises.map(exercise =>
-      exercise.id === id ? { ...exercise, completed: !exercise.completed } : exercise
-    ));
-  };
+  if (!user) {
+    return <AuthForm />;
+  }
 
-  const deleteExercise = (id: string) => {
-    setExercises(exercises.filter(exercise => exercise.id !== id));
+  const handleAddExercise = async (exerciseData: Parameters<typeof addExercise>[0]) => {
+    try {
+      await addExercise(exerciseData);
+      setShowExerciseForm(false);
+    } catch (error) {
+      console.error('Failed to add exercise:', error);
+    }
   };
 
   const createTrainingPlan = (planData: Omit<TrainingPlan, 'id'>) => {
@@ -56,6 +62,10 @@ function App() {
 
   const deletePlan = (id: string) => {
     setTrainingPlans(trainingPlans.filter(plan => plan.id !== id));
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   const completedExercises = exercises.filter(ex => ex.completed).length;
@@ -86,6 +96,17 @@ function App() {
             <h1 className="text-4xl font-bold text-gray-900">Gym Tracker</h1>
           </div>
           <p className="text-gray-600 text-lg">Track your exercises and follow your training plans</p>
+          
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <span className="text-sm text-gray-600">Welcome, {user.email}</span>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <LogOut size={16} />
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -144,7 +165,12 @@ function App() {
               </button>
             </div>
 
-            {exercises.length === 0 ? (
+            {exercisesLoading ? (
+              <div className="card text-center py-12">
+                <Dumbbell className="mx-auto text-gray-400 mb-4 animate-pulse" size={48} />
+                <p className="text-gray-600">Loading exercises...</p>
+              </div>
+            ) : exercises.length === 0 ? (
               <div className="card text-center py-12">
                 <Dumbbell className="mx-auto text-gray-400 mb-4" size={48} />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No exercises yet</h3>
@@ -270,7 +296,7 @@ function App() {
         {/* Modals */}
         {showExerciseForm && (
           <ExerciseForm
-            onAddExercise={addExercise}
+            onAddExercise={handleAddExercise}
             onClose={() => setShowExerciseForm(false)}
           />
         )}
