@@ -1,4 +1,3 @@
-import React from 'react';
 import { Check, Clock, Copyright as Weight, RotateCcw, Trash2, Edit3 } from 'lucide-react';
 import { Exercise } from '../types';
 

@@ -25,7 +25,7 @@ export default function AuthForm() {
         setError(error.message);
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError('An unexpected error occurred, error: ' + (err as Error).message);
     } finally {
       setLoading(false);
     }

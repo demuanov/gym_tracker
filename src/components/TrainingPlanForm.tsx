@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Calendar, Plus, X } from 'lucide-react';
-import { format, addDays, startOfMonth, endOfMonth } from 'date-fns';
+import { useState } from 'react';
+import { Calendar, X } from 'lucide-react';
+import { format, addDays, endOfMonth } from 'date-fns';
 import { TrainingPlan, Exercise } from '../types';
 
 interface TrainingPlanFormProps {

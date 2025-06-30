@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Calendar, CheckCircle, Clock, ArrowLeft, Target } from 'lucide-react';
-import { format, isToday, isPast, isFuture } from 'date-fns';
-import { TrainingPlan, WorkoutSession, Exercise } from '../types';
+import { format, isToday, isPast } from 'date-fns';
+import { TrainingPlan, WorkoutSession } from '../types';
 import ExerciseCard from './ExerciseCard';
 
 interface TrainingPlanViewProps {
