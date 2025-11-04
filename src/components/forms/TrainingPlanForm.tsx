@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Calendar, X } from 'lucide-react';
 import { format, addDays, endOfMonth } from 'date-fns';
-import { TrainingPlan, Exercise } from '../types';
+import { TrainingPlan, Exercise } from '../../types';
 
 interface TrainingPlanFormProps {
   exercises: Exercise[];

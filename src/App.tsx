@@ -10,10 +10,8 @@ import {
   ExerciseCard,
   TrainingPlanView,
   Button,
-  Card,
-  ProgressBar
+  Card
 } from './components';
-import { calculateProgress } from './utils';
 
 type View = 'exercises' | 'plans' | 'current-plan';
 

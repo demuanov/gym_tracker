@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Lock, Mail, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import { Exercise, ExerciseCategory } from '../types';
+import { Exercise, ExerciseCategory } from '../../types';
 
 interface ExerciseFormProps {
   onAddExercise: (exercise: Omit<Exercise, 'id' | 'completed' | 'createdAt'>) => void;

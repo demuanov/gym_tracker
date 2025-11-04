@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Calendar, CheckCircle, Clock, ArrowLeft, Target } from 'lucide-react';
 import { format, isToday, isPast } from 'date-fns';
-import { TrainingPlan, WorkoutSession } from '../types';
-import ExerciseCard from './ExerciseCard';
+import { TrainingPlan, WorkoutSession } from '../../types';
+import ExerciseCard from '../exercise/ExerciseCard';
 
 interface TrainingPlanViewProps {
   plan: TrainingPlan;
@@ -14,9 +14,9 @@ export default function TrainingPlanView({ plan, onUpdatePlan, onBack }: Trainin
   const [selectedWorkout, setSelectedWorkout] = useState<WorkoutSession | null>(null);
 
   const toggleExerciseComplete = (workoutId: string, exerciseId: string) => {
-    const updatedWorkouts = plan.workouts.map(workout => {
+    const updatedWorkouts = plan.workouts.map((workout: WorkoutSession) => {
       if (workout.id === workoutId) {
-        const updatedExercises = workout.exercises.map(exercise =>
+        const updatedExercises = workout.exercises.map((exercise: any) =>
           exercise.id === exerciseId
             ? { ...exercise, completed: !exercise.completed }
             : exercise
@@ -30,9 +30,9 @@ export default function TrainingPlanView({ plan, onUpdatePlan, onBack }: Trainin
   };
 
   const deleteExercise = (workoutId: string, exerciseId: string) => {
-    const updatedWorkouts = plan.workouts.map(workout => {
+    const updatedWorkouts = plan.workouts.map((workout: WorkoutSession) => {
       if (workout.id === workoutId) {
-        const updatedExercises = workout.exercises.filter(exercise => exercise.id !== exerciseId);
+        const updatedExercises = workout.exercises.filter((exercise: any) => exercise.id !== exerciseId);
         return { ...workout, exercises: updatedExercises };
       }
       return workout;
@@ -61,7 +61,7 @@ export default function TrainingPlanView({ plan, onUpdatePlan, onBack }: Trainin
   };
 
   const totalWorkouts = plan.workouts.length;
-  const completedWorkouts = plan.workouts.filter(w => getWorkoutStatus(w) === 'completed').length;
+  const completedWorkouts = plan.workouts.filter((w: WorkoutSession) => getWorkoutStatus(w) === 'completed').length;
   const progressPercentage = totalWorkouts > 0 ? (completedWorkouts / totalWorkouts) * 100 : 0;
 
   if (selectedWorkout) {
@@ -80,18 +80,18 @@ export default function TrainingPlanView({ plan, onUpdatePlan, onBack }: Trainin
               {format(selectedWorkout.date, 'EEEE, MMMM d, yyyy')}
             </h2>
             <p className="text-gray-600">
-              {selectedWorkout.exercises.filter(ex => ex.completed).length} of {selectedWorkout.exercises.length} exercises completed
+              {selectedWorkout.exercises.filter((ex: any) => ex.completed).length} of {selectedWorkout.exercises.length} exercises completed
             </p>
           </div>
         </div>
 
         <div className="grid gap-4">
-          {selectedWorkout.exercises.map(exercise => (
+          {selectedWorkout.exercises.map((exercise: any) => (
             <ExerciseCard
               key={exercise.id}
               exercise={exercise}
-              onToggleComplete={(id) => toggleExerciseComplete(selectedWorkout.id, id)}
-              onDelete={(id) => deleteExercise(selectedWorkout.id, id)}
+              onToggleComplete={(id: string) => toggleExerciseComplete(selectedWorkout.id, id)}
+              onDelete={(id: string) => deleteExercise(selectedWorkout.id, id)}
             />
           ))}
         </div>
@@ -150,13 +150,13 @@ export default function TrainingPlanView({ plan, onUpdatePlan, onBack }: Trainin
             </div>
             <div>
               <div className="text-2xl font-bold text-yellow-600">
-                {plan.workouts.filter(w => getWorkoutStatus(w) === 'partial').length}
+                {plan.workouts.filter((w: WorkoutSession) => getWorkoutStatus(w) === 'partial').length}
               </div>
               <div className="text-sm text-gray-600">In Progress</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-red-600">
-                {plan.workouts.filter(w => getWorkoutStatus(w) === 'missed').length}
+                {plan.workouts.filter((w: WorkoutSession) => getWorkoutStatus(w) === 'missed').length}
               </div>
               <div className="text-sm text-gray-600">Missed</div>
             </div>
@@ -171,9 +171,9 @@ export default function TrainingPlanView({ plan, onUpdatePlan, onBack }: Trainin
         </div>
 
         <div className="grid gap-3">
-          {plan.workouts.map(workout => {
+          {plan.workouts.map((workout: WorkoutSession) => {
             const status = getWorkoutStatus(workout);
-            const completedCount = workout.exercises.filter(ex => ex.completed).length;
+            const completedCount = workout.exercises.filter((ex: any) => ex.completed).length;
             const totalCount = workout.exercises.length;
 
             return (
