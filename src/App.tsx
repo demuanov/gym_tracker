@@ -3,11 +3,17 @@ import { Dumbbell, Plus, Calendar, List, Target, LogOut } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useExercises } from './hooks/useExercises';
 import { TrainingPlan } from './types';
-import AuthForm from './components/AuthForm';
-import ExerciseForm from './components/ExerciseForm';
-import ExerciseCard from './components/ExerciseCard';
-import TrainingPlanForm from './components/TrainingPlanForm';
-import TrainingPlanView from './components/TrainingPlanView';
+import { 
+  AuthForm, 
+  ExerciseForm, 
+  TrainingPlanForm,
+  ExerciseCard,
+  TrainingPlanView,
+  Button,
+  Card,
+  ProgressBar
+} from './components';
+import { calculateProgress } from './utils';
 
 type View = 'exercises' | 'plans' | 'current-plan';
 
@@ -111,18 +117,18 @@ function App() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="card text-center">
+          <Card className="text-center">
             <div className="text-3xl font-bold text-primary-600 mb-2">{totalExercises}</div>
             <div className="text-gray-600">Total Exercises</div>
-          </div>
-          <div className="card text-center">
+          </Card>
+          <Card className="text-center">
             <div className="text-3xl font-bold text-success-600 mb-2">{completedExercises}</div>
             <div className="text-gray-600">Completed Today</div>
-          </div>
-          <div className="card text-center">
+          </Card>
+          <Card className="text-center">
             <div className="text-3xl font-bold text-purple-600 mb-2">{activePlans}</div>
             <div className="text-gray-600">Training Plans</div>
-          </div>
+          </Card>
         </div>
 
         {/* Navigation */}
@@ -156,13 +162,12 @@ function App() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">Your Exercises</h2>
-              <button
+              <Button
                 onClick={() => setShowExerciseForm(true)}
-                className="btn-primary flex items-center gap-2"
+                leftIcon={<Plus size={20} />}
               >
-                <Plus size={20} />
                 Add Exercise
-              </button>
+              </Button>
             </div>
 
             {exercisesLoading ? (

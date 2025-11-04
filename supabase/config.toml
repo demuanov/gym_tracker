@@ -1,0 +1,39 @@
+# Supabase project configuration
+project_id = "your-project-id"
+
+[database]
+# Database settings
+port = 54322
+major_version = 15
+
+[api]
+# API settings
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+# Auth settings
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+
+[storage]
+# Storage settings
+enabled = true
+port = 54325
+image_transformation = { enabled = true }
+
+[functions]
+# Functions settings
+enabled = true
+port = 54326
+
+[db]
+# Database connection pooler settings
+pooler_enabled = true
+pooler_port = 54329

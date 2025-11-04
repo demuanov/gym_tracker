@@ -1,5 +1,7 @@
 import { Check, Clock, Copyright as Weight, RotateCcw, Trash2, Edit3 } from 'lucide-react';
-import { Exercise } from '../types';
+import { Exercise } from '../../types';
+import { getCategoryColor, formatWeight, formatDuration } from '../../utils';
+import { Card } from '../ui';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -9,22 +11,9 @@ interface ExerciseCardProps {
 }
 
 export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onEdit }: ExerciseCardProps) {
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      'Chest': 'bg-red-100 text-red-800',
-      'Back': 'bg-blue-100 text-blue-800',
-      'Shoulders': 'bg-yellow-100 text-yellow-800',
-      'Arms': 'bg-purple-100 text-purple-800',
-      'Legs': 'bg-green-100 text-green-800',
-      'Core': 'bg-orange-100 text-orange-800',
-      'Cardio': 'bg-pink-100 text-pink-800',
-      'Full Body': 'bg-indigo-100 text-indigo-800'
-    };
-    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
 
   return (
-    <div className={`card transition-all duration-200 ${exercise.completed ? 'bg-success-50 border-success-200' : 'hover:shadow-md'}`}>
+    <Card className={`transition-all duration-200 ${exercise.completed ? 'bg-success-50 border-success-200' : ''}`} hover={!exercise.completed}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -46,13 +35,13 @@ export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onE
             {exercise.weight && (
               <div className="flex items-center gap-1">
                 <Weight size={16} />
-                <span>{exercise.weight} kg</span>
+                <span>{formatWeight(exercise.weight)}</span>
               </div>
             )}
             {exercise.duration && (
               <div className="flex items-center gap-1">
                 <Clock size={16} />
-                <span>{exercise.duration} min</span>
+                <span>{formatDuration(exercise.duration)}</span>
               </div>
             )}
           </div>
@@ -97,6 +86,6 @@ export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onE
           </button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
