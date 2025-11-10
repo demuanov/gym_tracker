@@ -120,10 +120,20 @@ function App() {
     console.log('Workout clicked:', workout);
   };
 
-  // const handleExerciseClick = (exercise: WorkoutExercise) => {
-  //   setSelectedExercise(exercise);
-  //   setCurrentView('exercise-detail');
-  // };
+  const handleExerciseClick = (exercise: WorkoutExercise) => {
+    setSelectedExercise(exercise);
+    setCurrentView('exercise-detail');
+  };
+
+  const handleStartWorkout = (exercise: Exercise) => {
+    // Convert Exercise to WorkoutExercise for the detail view
+    const workoutExercise: WorkoutExercise = {
+      exercise: exercise,
+      completed: false
+    };
+    setSelectedExercise(workoutExercise);
+    setCurrentView('exercise-detail');
+  };
 
   // Exercise detail handlers
   const handleAddSet = () => {
@@ -191,11 +201,6 @@ function App() {
     await signOut();
     setIsDrawerOpen(false);
   };
-
-  // Statistics calculations
-  // const completedExercises = exercises.filter(ex => ex.completed).length;
-  // const totalExercises = exercises.length;
-  // const activePlans = trainingPlans.length;
   
   const stats = {
     totalWorkouts: calendarWorkouts.filter(w => w.status === 'completed').length,
@@ -292,6 +297,7 @@ function App() {
                     exercise={exercise}
                     onToggleComplete={toggleExerciseComplete}
                     onDelete={deleteExercise}
+                    onStartWorkout={handleStartWorkout}
                   />
                 ))}
               </div>
@@ -524,6 +530,7 @@ function App() {
                     exercise={exercise}
                     onToggleComplete={toggleExerciseComplete}
                     onDelete={deleteExercise}
+                    onStartWorkout={handleStartWorkout}
                   />
                 ))}
               </div>

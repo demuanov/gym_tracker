@@ -8,9 +8,10 @@ interface ExerciseCardProps {
   onToggleComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit?: (exercise: Exercise) => void;
+  onStartWorkout?: (exercise: Exercise) => void;
 }
 
-export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onEdit }: ExerciseCardProps) {
+export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onEdit, onStartWorkout }: ExerciseCardProps) {
 
   return (
     <Card className={`transition-all duration-200 ${exercise.completed ? 'bg-success-50 border-success-200' : ''}`} hover={!exercise.completed}>
@@ -55,17 +56,28 @@ export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onE
       </div>
 
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => onToggleComplete(exercise.id)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors ${
-            exercise.completed
-              ? 'bg-success-100 text-success-700 hover:bg-success-200'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <Check size={16} />
-          {exercise.completed ? 'Completed' : 'Mark Complete'}
-        </button>
+        <div className="flex gap-3">
+          {onStartWorkout && (
+            <button
+              onClick={() => onStartWorkout(exercise)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium bg-primary-100 text-primary-700 hover:bg-primary-200 transition-colors"
+            >
+              <Clock size={16} />
+              Start Workout
+            </button>
+          )}
+          <button
+            onClick={() => onToggleComplete(exercise.id)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors ${
+              exercise.completed
+                ? 'bg-success-100 text-success-700 hover:bg-success-200'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Check size={16} />
+            {exercise.completed ? 'Completed' : 'Mark Complete'}
+          </button>
+        </div>
 
         <div className="flex gap-2">
           {onEdit && (
