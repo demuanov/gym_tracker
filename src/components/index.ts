@@ -4,3 +4,4 @@ export * from './forms';
 export * from './exercise';
 export * from './training';
 export * from './layout';
+export * from './calendar';

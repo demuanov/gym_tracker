@@ -6,6 +6,31 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Load environment variables from .env file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const envPath = join(__dirname, '..', '.env');
+
+try {
+  const envContent = readFileSync(envPath, 'utf8');
+  const envLines = envContent.split('\n');
+  
+  envLines.forEach(line => {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const [key, ...valueParts] = trimmed.split('=');
+      if (key && valueParts.length > 0) {
+        process.env[key.trim()] = valueParts.join('=').trim();
+      }
+    }
+  });
+} catch (error) {
+  console.log('Warning: Could not load .env file');
+}
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;

@@ -1,28 +1,58 @@
 import { useState } from 'react';
-import { Dumbbell, Plus, Calendar, List, Target, LogOut } from 'lucide-react';
+import { Dumbbell, Plus, Calendar, List, Target } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useExercises } from './hooks/useExercises';
-import { TrainingPlan } from './types';
+import { useWorkoutTimer } from './hooks/useWorkoutTimer';
+import { 
+  TrainingPlan, 
+  CalendarWorkout, 
+  ExerciseSet,
+  WorkoutExercise 
+} from './types';
 import { 
   AuthForm, 
   ExerciseForm, 
   TrainingPlanForm,
+  EnhancedTrainingPlanForm,
   ExerciseCard,
   TrainingPlanView,
+  CalendarView,
+  ExerciseDetailView,
+  NavigationDrawer,
+  DrawerToggle,
   Button,
   Card
 } from './components';
 
-type View = 'exercises' | 'plans' | 'current-plan';
+type View = 'exercises' | 'plans' | 'current-plan' | 'calendar' | 'exercise-detail' | 'statistics' | 'profile';
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { exercises, loading: exercisesLoading, addExercise, toggleExerciseComplete, deleteExercise } = useExercises();
+  const {
+    activeTimer,
+    // currentTime,
+    // isRunning,
+    startTimer,
+    pauseTimer,
+    resetTimer,
+    // stopTimer
+  } = useWorkoutTimer();  // Existing state
   const [trainingPlans, setTrainingPlans] = useState<TrainingPlan[]>([]);
-  const [currentView, setCurrentView] = useState<View>('exercises');
+  const [currentView, setCurrentView] = useState<View>('calendar'); // Changed default to calendar
   const [showExerciseForm, setShowExerciseForm] = useState(false);
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<TrainingPlan | null>(null);
+
+  // New enhanced features state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedExercise, setSelectedExercise] = useState<WorkoutExercise | null>(null);
+  const [showEnhancedPlanForm, setShowEnhancedPlanForm] = useState(false);
+  
+  // New data state - in real app these would come from API/database
+  const [calendarWorkouts, setCalendarWorkouts] = useState<CalendarWorkout[]>([]);
+  const [exerciseSets, setExerciseSets] = useState<ExerciseSet[]>([]);
 
   if (authLoading) {
     return (
@@ -39,7 +69,7 @@ function App() {
     return <AuthForm />;
   }
 
-  const handleAddExercise = async (exerciseData: Parameters<typeof addExercise>[0]) => {
+  const createExercise = async (exerciseData: Parameters<typeof addExercise>[0]) => {
     try {
       await addExercise(exerciseData);
       setShowExerciseForm(false);
@@ -57,6 +87,95 @@ function App() {
     setShowPlanForm(false);
   };
 
+  // New enhanced handlers
+  const createEnhancedTrainingPlan = (planData: Omit<TrainingPlan, 'id'>) => {
+    const newPlan: TrainingPlan = {
+      ...planData,
+      id: Date.now().toString()
+    };
+    setTrainingPlans([...trainingPlans, newPlan]);
+    setShowEnhancedPlanForm(false);
+  };
+
+  const handleNavigate = (view: View) => {
+    setCurrentView(view);
+    setIsDrawerOpen(false);
+  };
+
+  const handleScheduleWorkout = (date: Date, planId?: string) => {
+    const newWorkout: CalendarWorkout = {
+      id: `workout_${Date.now()}`,
+      user_id: user.id,
+      training_plan_id: planId,
+      scheduled_date: date,
+      status: 'scheduled',
+      created_at: new Date(),
+      training_plan: planId ? trainingPlans.find(p => p.id === planId) : undefined
+    };
+    setCalendarWorkouts([...calendarWorkouts, newWorkout]);
+  };
+
+  const handleWorkoutClick = (workout: CalendarWorkout) => {
+    // For now, just log - can expand to show workout detail
+    console.log('Workout clicked:', workout);
+  };
+
+  // const handleExerciseClick = (exercise: WorkoutExercise) => {
+  //   setSelectedExercise(exercise);
+  //   setCurrentView('exercise-detail');
+  // };
+
+  // Exercise detail handlers
+  const handleAddSet = () => {
+    if (!selectedExercise) return;
+    
+    const newSet: ExerciseSet = {
+      id: `set_${Date.now()}`,
+      workout_exercise_id: selectedExercise.id,
+      set_number: exerciseSets.filter(s => s.workout_exercise_id === selectedExercise.id).length + 1,
+      reps: selectedExercise.exercise.reps || 12,
+      weight: selectedExercise.exercise.weight || 0,
+      rest_time: 90,
+      completed: false,
+      created_at: new Date()
+    };
+    
+    setExerciseSets([...exerciseSets, newSet]);
+  };
+
+  const handleUpdateSet = (setId: string, updates: Partial<ExerciseSet>) => {
+    setExerciseSets(prev => prev.map(set => 
+      set.id === setId ? { ...set, ...updates } : set
+    ));
+  };
+
+  const handleDeleteSet = (setId: string) => {
+    setExerciseSets(prev => prev.filter(set => set.id !== setId));
+  };
+
+  const handleCompleteSet = (setId: string) => {
+    setExerciseSets(prev => prev.map(set => 
+      set.id === setId 
+        ? { ...set, completed: !set.completed, completed_at: new Date() }
+        : set
+    ));
+  };
+
+  const handleCompleteExercise = () => {
+    setCurrentView('calendar');
+    setSelectedExercise(null);
+  };
+
+  // Timer handlers
+  const handleStartTimer = (type: 'exercise' | 'rest', duration: number) => {
+    startTimer(type, duration, selectedExercise?.id);
+  };
+
+  const getCurrentSets = () => {
+    if (!selectedExercise) return [];
+    return exerciseSets.filter(set => set.workout_exercise_id === selectedExercise.id);
+  };
+
   const updateTrainingPlan = (updatedPlan: TrainingPlan) => {
     setTrainingPlans(trainingPlans.map(plan =>
       plan.id === updatedPlan.id ? updatedPlan : plan
@@ -70,11 +189,22 @@ function App() {
 
   const handleSignOut = async () => {
     await signOut();
+    setIsDrawerOpen(false);
   };
 
-  const completedExercises = exercises.filter(ex => ex.completed).length;
-  const totalExercises = exercises.length;
-  const activePlans = trainingPlans.length;
+  // Statistics calculations
+  // const completedExercises = exercises.filter(ex => ex.completed).length;
+  // const totalExercises = exercises.length;
+  // const activePlans = trainingPlans.length;
+  
+  const stats = {
+    totalWorkouts: calendarWorkouts.filter(w => w.status === 'completed').length,
+    totalExercises: exercises.length,
+    weeklyGoal: 3,
+    currentStreak: 5, // Mock data - calculate based on actual workouts
+    totalWeight: exerciseSets.reduce((sum, set) => sum + (set.weight || 0) * set.reps, 0),
+    averageWorkoutTime: 45 // Mock data
+  };
 
   if (selectedPlan) {
     return (
@@ -90,70 +220,271 @@ function App() {
     );
   }
 
+  // Render view content
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'calendar':
+        return (
+          <CalendarView
+            calendarWorkouts={calendarWorkouts}
+            trainingPlans={trainingPlans}
+            onDateSelect={setSelectedDate}
+            onScheduleWorkout={handleScheduleWorkout}
+            onWorkoutClick={handleWorkoutClick}
+            selectedDate={selectedDate}
+          />
+        );
+        
+      case 'exercise-detail':
+        if (!selectedExercise) {
+          setCurrentView('calendar');
+          return null;
+        }
+        return (
+          <ExerciseDetailView
+            exercise={selectedExercise.exercise}
+            sets={getCurrentSets()}
+            activeTimer={activeTimer}
+            onBack={() => setCurrentView('calendar')}
+            onAddSet={handleAddSet}
+            onUpdateSet={handleUpdateSet}
+            onDeleteSet={handleDeleteSet}
+            onCompleteSet={handleCompleteSet}
+            onStartTimer={handleStartTimer}
+            onPauseTimer={pauseTimer}
+            onResetTimer={resetTimer}
+            onCompleteExercise={handleCompleteExercise}
+          />
+        );
+
+      case 'exercises':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Your Exercises</h2>
+              <Button
+                onClick={() => setShowExerciseForm(true)}
+                leftIcon={<Plus size={20} />}
+              >
+                Add Exercise
+              </Button>
+            </div>
+
+            {exercisesLoading ? (
+              <Card className="text-center py-12">
+                <Dumbbell className="mx-auto text-gray-400 mb-4 animate-pulse" size={48} />
+                <p className="text-gray-600">Loading exercises...</p>
+              </Card>
+            ) : exercises.length === 0 ? (
+              <Card className="text-center py-12">
+                <Dumbbell className="mx-auto text-gray-400 mb-4" size={48} />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No exercises yet</h3>
+                <p className="text-gray-600 mb-6">Start by adding your first exercise to track your workouts</p>
+                <Button onClick={() => setShowExerciseForm(true)}>
+                  Add Your First Exercise
+                </Button>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {exercises.map(exercise => (
+                  <ExerciseCard
+                    key={exercise.id}
+                    exercise={exercise}
+                    onToggleComplete={toggleExerciseComplete}
+                    onDelete={deleteExercise}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'plans':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Training Plans</h2>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowPlanForm(true)}
+                  variant="outline"
+                  disabled={exercises.length === 0}
+                  leftIcon={<Plus size={20} />}
+                >
+                  Classic Plan
+                </Button>
+                <Button
+                  onClick={() => setShowEnhancedPlanForm(true)}
+                  disabled={exercises.length === 0}
+                  leftIcon={<Plus size={20} />}
+                >
+                  Enhanced Plan
+                </Button>
+              </div>
+            </div>
+
+            {exercises.length === 0 ? (
+              <Card className="text-center py-12">
+                <Target className="mx-auto text-gray-400 mb-4" size={48} />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Create exercises first</h3>
+                <p className="text-gray-600 mb-6">You need to have exercises before creating a training plan</p>
+                <Button onClick={() => setCurrentView('exercises')}>
+                  Go to Exercises
+                </Button>
+              </Card>
+            ) : trainingPlans.length === 0 ? (
+              <Card className="text-center py-12">
+                <Calendar className="mx-auto text-gray-400 mb-4" size={48} />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No training plans yet</h3>
+                <p className="text-gray-600 mb-6">Create your first training plan to get started</p>
+                <Button onClick={() => setShowEnhancedPlanForm(true)}>
+                  Create Your First Plan
+                </Button>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {trainingPlans.map(plan => {
+                  // const totalWorkouts = plan.workouts?.length || 0;
+                  // const completedWorkouts = plan.workouts?.filter(workout =>
+                  //   workout.exercises.every(ex => ex.completed) && workout.exercises.length > 0
+                  // ).length || 0;
+                  // const progressPercentage = totalWorkouts > 0 ? (completedWorkouts / totalWorkouts) * 100 : 0;
+
+                  return (
+                    <Card key={plan.id} hover>
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-semibold text-gray-900 mb-2">{plan.name}</h3>
+                          {plan.description && (
+                            <p className="text-gray-700 mb-3">{plan.description}</p>
+                          )}
+                          {plan.exercises && (
+                            <p className="text-sm text-gray-600 mb-3">
+                              {plan.exercises.length} exercise{plan.exercises.length !== 1 ? 's' : ''}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => setSelectedPlan(plan)}
+                          className="flex-1"
+                        >
+                          View Plan
+                        </Button>
+                        <Button
+                          onClick={() => deletePlan(plan.id)}
+                          variant="outline"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'statistics':
+        return (
+          <Card className="p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Statistics</h2>
+            <p className="text-gray-600">Detailed statistics and analytics coming soon!</p>
+          </Card>
+        );
+        
+      case 'profile':
+        return (
+          <Card className="p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Profile Settings</h2>
+            <p className="text-gray-600">Profile and account settings coming soon!</p>
+          </Card>
+        );
+        
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Dumbbell className="text-primary-600" size={40} />
-            <h1 className="text-4xl font-bold text-gray-900">Gym Tracker</h1>
-          </div>
-          <p className="text-gray-600 text-lg">Track your exercises and follow your training plans</p>
-          
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <span className="text-sm text-gray-600">Welcome, {user.email}</span>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <LogOut size={16} />
-              Sign Out
-            </button>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Navigation Drawer */}
+      <NavigationDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        user={user}
+        onNavigate={handleNavigate}
+        onSignOut={handleSignOut}
+        currentView={currentView}
+        stats={stats}
+      />
+
+      {/* Main Content */}
+      <div className="flex-1 lg:ml-0">
+        {/* Mobile Top Bar */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3 lg:hidden">
+          <div className="flex items-center justify-between">
+            <DrawerToggle onClick={() => setIsDrawerOpen(true)} />
+            <h1 className="text-lg font-semibold text-gray-900">Gym Tracker</h1>
+            <div className="w-8" />
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="text-center">
-            <div className="text-3xl font-bold text-primary-600 mb-2">{totalExercises}</div>
-            <div className="text-gray-600">Total Exercises</div>
-          </Card>
-          <Card className="text-center">
-            <div className="text-3xl font-bold text-success-600 mb-2">{completedExercises}</div>
-            <div className="text-gray-600">Completed Today</div>
-          </Card>
-          <Card className="text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">{activePlans}</div>
-            <div className="text-gray-600">Training Plans</div>
-          </Card>
+        {/* Desktop Header & Navigation */}
+        <div className="hidden lg:block bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Gym Tracker</h1>
+              <p className="text-gray-600">Welcome back, {user.email}</p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowExerciseForm(true)}
+                variant="outline"
+                leftIcon={<Plus size={16} />}
+              >
+                Add Exercise
+              </Button>
+              <Button
+                onClick={() => setShowEnhancedPlanForm(true)}
+                leftIcon={<Plus size={16} />}
+              >
+                Create Plan
+              </Button>
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex gap-4">
+            {[
+              { key: 'calendar', label: 'Calendar', icon: Calendar },
+              { key: 'exercises', label: 'Exercises', icon: List },
+              { key: 'plans', label: 'Plans', icon: Target },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setCurrentView(key as View)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  currentView === key
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Icon size={18} />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex flex-wrap gap-4 mb-8">
-          <button
-            onClick={() => setCurrentView('exercises')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              currentView === 'exercises'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <List size={20} />
-            Exercises
-          </button>
-          <button
-            onClick={() => setCurrentView('plans')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              currentView === 'plans'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <Calendar size={20} />
-            Training Plans
-          </button>
+        {/* Page Content */}
+        <div className="p-4 lg:p-6">
+          {renderCurrentView()}
         </div>
+      </div>
 
         {/* Content */}
         {currentView === 'exercises' && (
@@ -296,22 +627,40 @@ function App() {
           </div>
         )}
 
-        {/* Modals */}
-        {showExerciseForm && (
-          <ExerciseForm
-            onAddExercise={handleAddExercise}
-            onClose={() => setShowExerciseForm(false)}
-          />
-        )}
+      {/* Enhanced Modals */}
+      {showExerciseForm && (
+        <ExerciseForm
+          onAddExercise={createExercise}
+          onClose={() => setShowExerciseForm(false)}
+        />
+      )}
 
-        {showPlanForm && (
-          <TrainingPlanForm
-            exercises={exercises}
-            onCreatePlan={createTrainingPlan}
-            onClose={() => setShowPlanForm(false)}
-          />
-        )}
-      </div>
+      {selectedPlan && (
+        <TrainingPlanView
+          plan={selectedPlan}
+          onUpdatePlan={(updatedPlan) => {
+            const updatedPlans = trainingPlans.map(p => p.id === updatedPlan.id ? updatedPlan : p);
+            setTrainingPlans(updatedPlans);
+          }}
+          onBack={() => setSelectedPlan(null)}
+        />
+      )}
+
+      {showPlanForm && (
+        <TrainingPlanForm
+          exercises={exercises}
+          onCreatePlan={createTrainingPlan}
+          onClose={() => setShowPlanForm(false)}
+        />
+      )}
+
+      {showEnhancedPlanForm && (
+        <EnhancedTrainingPlanForm
+          exercises={exercises}
+          onCreatePlan={createEnhancedTrainingPlan}
+          onClose={() => setShowEnhancedPlanForm(false)}
+        />
+      )}
     </div>
   );
 }
