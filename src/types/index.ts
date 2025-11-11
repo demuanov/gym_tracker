@@ -74,6 +74,7 @@ export interface WorkoutSession {
 export interface TrainingPlan {
   id: string;
   name: string;
+  category?: ExerciseCategory;
   startDate: Date;
   endDate: Date;
   workouts: WorkoutSession[];

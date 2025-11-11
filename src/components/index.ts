@@ -5,3 +5,6 @@ export * from './exercise';
 export * from './training';
 export * from './layout';
 export * from './calendar';
+
+// Admin components
+export { default as LogDashboard } from './LogDashboard';

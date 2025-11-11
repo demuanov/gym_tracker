@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dumbbell, Plus, Calendar, List, Target, Clock } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useExercises } from './hooks/useExercises';
 import { useWorkoutTimer } from './hooks/useWorkoutTimer';
 import { getCategoryColor } from './utils';
+import { userTracker } from './services/userTracker';
 import { 
   Exercise,
   TrainingPlan, 
@@ -23,7 +24,8 @@ import {
   NavigationDrawer,
   DrawerToggle,
   Button,
-  Card
+  Card,
+  LogDashboard
 } from './components';
 
 type View = 'exercises' | 'plans' | 'current-plan' | 'calendar' | 'exercise-detail' | 'statistics' | 'profile';
@@ -55,6 +57,47 @@ function App() {
   // New data state - in real app these would come from API/database
   const [calendarWorkouts, setCalendarWorkouts] = useState<CalendarWorkout[]>([]);
   const [exerciseSets, setExerciseSets] = useState<ExerciseSet[]>([]);
+  const [showLogDashboard, setShowLogDashboard] = useState(false);
+
+  // Initialize user tracking and log app start
+  useEffect(() => {
+    userTracker.trackNavigation('app_start', currentView, 'initial_load');
+    
+    // Track user authentication status
+    if (user) {
+      userTracker.trackFeatureUsage('authentication', 'user_authenticated', {
+        userId: user.id,
+        email: user.email
+      });
+    }
+
+    // Add keyboard shortcut for logs (Ctrl+Shift+L)
+    const handleKeyboard = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+        e.preventDefault();
+        setShowLogDashboard(true);
+        userTracker.trackFeatureUsage('admin', 'log_dashboard_opened', {
+          method: 'keyboard_shortcut'
+        });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboard);
+
+    // Cleanup on component unmount
+    return () => {
+      document.removeEventListener('keydown', handleKeyboard);
+      userTracker.destroy();
+    };
+  }, []);
+
+  // Track view changes
+  useEffect(() => {
+    userTracker.trackFeatureUsage('navigation', 'view_changed', {
+      newView: currentView,
+      timestamp: Date.now()
+    });
+  }, [currentView]);
 
   if (authLoading) {
     return (
@@ -73,35 +116,97 @@ function App() {
 
   const createExercise = async (exerciseData: Parameters<typeof addExercise>[0]) => {
     try {
+      // Track exercise creation attempt
+      userTracker.trackFeatureUsage('exercise_management', 'create_started', {
+        exerciseName: exerciseData.name,
+        category: exerciseData.category
+      });
+      
       await addExercise(exerciseData);
+      
+      // Track successful exercise creation and form completion
+      userTracker.trackFeatureUsage('exercise_management', 'create_completed', {
+        exerciseName: exerciseData.name,
+        category: exerciseData.category,
+        success: true
+      });
+      
+      userTracker.trackFormInteraction('exercise_form', 'completed', undefined, {
+        currentView,
+        success: true,
+        exerciseName: exerciseData.name
+      });
+      
       setShowExerciseForm(false);
     } catch (error) {
       console.error('Failed to add exercise:', error);
+      
+      // Track exercise creation error
+      userTracker.trackError(error as Error, 'EXERCISE_CREATION', {
+        exerciseData,
+        attemptedAction: 'create_exercise'
+      });
     }
   };
 
   const createTrainingPlan = (planData: Omit<TrainingPlan, 'id'>) => {
+    // Track training plan creation
+    userTracker.trackFeatureUsage('training_plan', 'create_completed', {
+      planName: planData.name,
+      exerciseCount: planData.exercises?.length || 0,
+      category: planData.category
+    });
+    
     const newPlan: TrainingPlan = {
       ...planData,
       id: Date.now().toString()
     };
     setTrainingPlans([...trainingPlans, newPlan]);
+    
+    // Track form completion
+    userTracker.trackFormInteraction('training_plan_form', 'completed', undefined, {
+      currentView,
+      success: true,
+      planName: planData.name
+    });
+    
     setShowPlanForm(false);
   };
 
   // New enhanced handlers
   const createEnhancedTrainingPlan = (planData: Omit<TrainingPlan, 'id'>) => {
+    // Track enhanced training plan creation
+    userTracker.trackFeatureUsage('training_plan', 'create_enhanced_completed', {
+      planName: planData.name,
+      exerciseCount: planData.exercises?.length || 0,
+      category: planData.category,
+      isEnhanced: true
+    });
+    
     const newPlan: TrainingPlan = {
       ...planData,
       id: Date.now().toString()
     };
     setTrainingPlans([...trainingPlans, newPlan]);
+    
+    // Track enhanced form completion
+    userTracker.trackFormInteraction('enhanced_training_plan_form', 'completed', undefined, {
+      currentView,
+      success: true,
+      planName: planData.name,
+      isEnhanced: true
+    });
+    
     setShowEnhancedPlanForm(false);
   };
 
   const handleNavigate = (view: View) => {
+    const previousView = currentView;
     setCurrentView(view);
     setIsDrawerOpen(false);
+    
+    // Track navigation for comprehensive user interaction logging
+    userTracker.trackNavigation(previousView, view, 'drawer_navigation');
   };
 
   const handleScheduleWorkout = (date: Date, planId?: string) => {
@@ -146,6 +251,15 @@ function App() {
   const handleAddSet = () => {
     if (!selectedExercise) return;
     
+    // Track set addition
+    userTracker.trackFeatureUsage('workout_tracking', 'set_added', {
+      exerciseId: selectedExercise.id,
+      exerciseName: selectedExercise.exercise.name,
+      setNumber: exerciseSets.filter(s => s.workout_exercise_id === selectedExercise.id).length + 1,
+      reps: selectedExercise.exercise.reps || 12,
+      weight: selectedExercise.exercise.weight || 0
+    });
+    
     const newSet: ExerciseSet = {
       id: `set_${Date.now()}`,
       workout_exercise_id: selectedExercise.id,
@@ -161,16 +275,46 @@ function App() {
   };
 
   const handleUpdateSet = (setId: string, updates: Partial<ExerciseSet>) => {
+    // Track set updates
+    userTracker.trackFeatureUsage('workout_tracking', 'set_updated', {
+      setId,
+      updates,
+      exerciseId: selectedExercise?.id,
+      exerciseName: selectedExercise?.exercise.name
+    });
+    
     setExerciseSets(prev => prev.map(set => 
       set.id === setId ? { ...set, ...updates } : set
     ));
   };
 
   const handleDeleteSet = (setId: string) => {
+    // Track set deletion
+    const setToDelete = exerciseSets.find(s => s.id === setId);
+    userTracker.trackFeatureUsage('workout_tracking', 'set_deleted', {
+      setId,
+      exerciseId: selectedExercise?.id,
+      exerciseName: selectedExercise?.exercise.name,
+      setNumber: setToDelete?.set_number
+    });
+    
     setExerciseSets(prev => prev.filter(set => set.id !== setId));
   };
 
   const handleCompleteSet = (setId: string) => {
+    const currentSet = exerciseSets.find(s => s.id === setId);
+    
+    // Track set completion/un-completion
+    userTracker.trackFeatureUsage('workout_tracking', 'set_completion_toggled', {
+      setId,
+      exerciseId: selectedExercise?.id,
+      exerciseName: selectedExercise?.exercise.name,
+      wasCompleted: currentSet?.completed,
+      newStatus: !currentSet?.completed,
+      reps: currentSet?.reps,
+      weight: currentSet?.weight
+    });
+    
     setExerciseSets(prev => prev.map(set => 
       set.id === setId 
         ? { ...set, completed: !set.completed, completed_at: new Date() }
@@ -185,6 +329,14 @@ function App() {
 
   // Timer handlers
   const handleStartTimer = (type: 'exercise' | 'rest', duration: number) => {
+    // Track timer usage
+    userTracker.trackFeatureUsage('workout_timer', 'timer_started', {
+      timerType: type,
+      duration: duration,
+      exerciseId: selectedExercise?.id,
+      exerciseName: selectedExercise?.exercise?.name
+    });
+    
     startTimer(type, duration, selectedExercise?.id);
   };
 
@@ -203,6 +355,8 @@ function App() {
   const deletePlan = (id: string) => {
     setTrainingPlans(trainingPlans.filter(plan => plan.id !== id));
   };
+
+
 
   const handleSignOut = async () => {
     await signOut();
@@ -835,6 +989,18 @@ function App() {
           exercises={exercises}
           onCreatePlan={createEnhancedTrainingPlan}
           onClose={() => setShowEnhancedPlanForm(false)}
+        />
+      )}
+
+      {/* Log Dashboard - Accessible via Ctrl+Shift+L */}
+      {showLogDashboard && (
+        <LogDashboard
+          onClose={() => {
+            setShowLogDashboard(false);
+            userTracker.trackFeatureUsage('admin', 'log_dashboard_closed', {
+              method: 'close_button'
+            });
+          }}
         />
       )}
     </div>

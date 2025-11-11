@@ -1,8 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../types/database';
 import { config } from '../config/env';
+import { LoggedSupabaseClient } from './supabaseLogger';
 
-export const supabase = createClient<Database>(config.supabase.url, config.supabase.anonKey);
+// Create the original Supabase client
+const originalClient = createClient<Database>(config.supabase.url, config.supabase.anonKey);
+
+// Export the logged version for comprehensive database operation tracking
+export const supabase = new LoggedSupabaseClient(originalClient);
 
 // Auth service
 export const authService = {

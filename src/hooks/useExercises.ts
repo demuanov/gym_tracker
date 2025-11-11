@@ -26,7 +26,7 @@ export function useExercises() {
 
       if (error) throw error;
 
-      const formattedExercises: Exercise[] = data.map(exercise => ({
+      const formattedExercises: Exercise[] = data.map((exercise: any) => ({
         id: exercise.id,
         name: exercise.name,
         category: exercise.category,
@@ -47,7 +47,7 @@ export function useExercises() {
     }
   };
 
-  const addExercise = async (exerciseData: Omit<Exercise, 'id' | 'completed' | 'createdAt'>) => {
+  const addExercise = async (exerciseInput: Omit<Exercise, 'id' | 'completed' | 'createdAt'>) => {
     if (!user) return;
 
     try {
@@ -55,31 +55,33 @@ export function useExercises() {
         .from('exercises')
         .insert({
           user_id: user.id,
-          name: exerciseData.name,
-          category: exerciseData.category,
-          sets: exerciseData.sets || null,
-          reps: exerciseData.reps || null,
-          weight: exerciseData.weight || null,
-          duration: exerciseData.duration || null,
-          notes: exerciseData.notes || null,
+          name: exerciseInput.name,
+          category: exerciseInput.category,
+          sets: exerciseInput.sets || null,
+          reps: exerciseInput.reps || null,
+          weight: exerciseInput.weight || null,
+          duration: exerciseInput.duration || null,
+          notes: exerciseInput.notes || null,
           completed: false,
         })
         .select()
         .single();
 
       if (error) throw error;
+      if (!data) throw new Error('No data returned from insert');
 
+      const exerciseData: any = Array.isArray(data) ? data[0] : data;
       const newExercise: Exercise = {
-        id: data.id,
-        name: data.name,
-        category: data.category,
-        sets: data.sets || undefined,
-        reps: data.reps || undefined,
-        weight: data.weight || undefined,
-        duration: data.duration || undefined,
-        notes: data.notes || undefined,
-        completed: data.completed,
-        createdAt: new Date(data.created_at),
+        id: exerciseData.id,
+        name: exerciseData.name,
+        category: exerciseData.category,
+        sets: exerciseData.sets || undefined,
+        reps: exerciseData.reps || undefined,
+        weight: exerciseData.weight || undefined,
+        duration: exerciseData.duration || undefined,
+        notes: exerciseData.notes || undefined,
+        completed: exerciseData.completed,
+        createdAt: new Date(exerciseData.created_at),
       };
 
       setExercises(prev => [newExercise, ...prev]);
