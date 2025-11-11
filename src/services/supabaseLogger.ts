@@ -59,7 +59,7 @@ export class LoggedSupabaseClient {
   from(table: string) {
     return {
       // SELECT operations
-      select: (columns: string = '*') => {
+      select: (columns = '*') => {
         const selectTimer = new PerformanceTimer();
         
         gymLogger.logInfo(

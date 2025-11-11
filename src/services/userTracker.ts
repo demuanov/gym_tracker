@@ -2,7 +2,7 @@ import { gymLogger } from './optimizedLogger';
 
 // User interaction tracker for comprehensive UI logging
 class UserInteractionTracker {
-  private currentView: string = 'unknown';
+  private currentView = 'unknown';
   private sessionStartTime: number = Date.now();
   private pageLoadTime: number = Date.now();
   private clickEventListener?: (event: MouseEvent) => void;
@@ -281,7 +281,7 @@ class UserInteractionTracker {
   }
 
   // Public methods for manual tracking
-  trackNavigation(from: string, to: string, method: string = 'programmatic') {
+  trackNavigation(from: string, to: string, method = 'programmatic') {
     const previousView = this.currentView;
     this.currentView = to;
     

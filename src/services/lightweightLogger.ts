@@ -34,7 +34,7 @@ export interface LogEntry {
 // Lightweight logger class - replaces Winston for smaller bundle
 class LightweightLogger {
   private logs: LogEntry[] = [];
-  private maxLogs: number = 1000;
+  private maxLogs = 1000;
   private userId: string | null = null;
   private sessionId: string;
   private isProduction = import.meta.env.PROD;
