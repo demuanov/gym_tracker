@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   ArrowLeft, 
   Plus, 
@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Exercise, ExerciseSet, WorkoutTimer } from '../../types';
 import { Button, Card } from '../ui';
-import { getCategoryColor, formatWeight } from '../../utils';
+import { getCategoryColor } from '../../utils';
 
 interface ExerciseDetailViewProps {
   exercise: Exercise;
@@ -43,8 +43,8 @@ export default function ExerciseDetailView({
   onResetTimer,
   onCompleteExercise
 }: ExerciseDetailViewProps) {
-  const [newSetReps, setNewSetReps] = useState(exercise.reps || 12);
-  const [newSetWeight, setNewSetWeight] = useState(exercise.weight || 0);
+  const [_newSetReps, setNewSetReps] = useState(exercise.reps || 12);
+  const [_newSetWeight, setNewSetWeight] = useState(exercise.weight || 0);
 
   const completedSets = sets.filter(set => set.completed).length;
   const totalSets = sets.length;

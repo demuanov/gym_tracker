@@ -6,7 +6,7 @@ export interface ValidationRule {
   min?: number;
   max?: number;
   pattern?: RegExp;
-  custom?: (value: any) => boolean;
+  custom?: (value: unknown) => boolean;
 }
 
 export interface ValidationError {
@@ -14,7 +14,7 @@ export interface ValidationError {
   message: string;
 }
 
-export const validateField = (value: any, rules: ValidationRule, fieldName: string): ValidationError | null => {
+export const validateField = (value: unknown, rules: ValidationRule, fieldName: string): ValidationError | null => {
   if (rules.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
     return { field: fieldName, message: `${fieldName} is required` };
   }
@@ -47,7 +47,7 @@ export const validateField = (value: any, rules: ValidationRule, fieldName: stri
   return null;
 };
 
-export const validateForm = (data: Record<string, any>, schema: Record<string, ValidationRule>): ValidationError[] => {
+export const validateForm = (data: Record<string, unknown>, schema: Record<string, ValidationRule>): ValidationError[] => {
   const errors: ValidationError[] = [];
   
   for (const [field, rules] of Object.entries(schema)) {

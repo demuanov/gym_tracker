@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Dumbbell, Plus, Calendar, List, Target } from 'lucide-react';
+import { Dumbbell, Plus, Calendar, List, Target, Clock } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useExercises } from './hooks/useExercises';
 import { useWorkoutTimer } from './hooks/useWorkoutTimer';
+import { getCategoryColor } from './utils';
 import { 
+  Exercise,
   TrainingPlan, 
   CalendarWorkout, 
   ExerciseSet,
@@ -39,7 +41,7 @@ function App() {
     // stopTimer
   } = useWorkoutTimer();  // Existing state
   const [trainingPlans, setTrainingPlans] = useState<TrainingPlan[]>([]);
-  const [currentView, setCurrentView] = useState<View>('calendar'); // Changed default to calendar
+  const [currentView, setCurrentView] = useState<View>('current-plan'); // Changed default to current-plan
   const [showExerciseForm, setShowExerciseForm] = useState(false);
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<TrainingPlan | null>(null);
@@ -120,16 +122,21 @@ function App() {
     console.log('Workout clicked:', workout);
   };
 
-  const handleExerciseClick = (exercise: WorkoutExercise) => {
-    setSelectedExercise(exercise);
-    setCurrentView('exercise-detail');
-  };
+  // const handleExerciseClick = (exercise: WorkoutExercise) => {
+  //   setSelectedExercise(exercise);
+  //   setCurrentView('exercise-detail');
+  // };
 
   const handleStartWorkout = (exercise: Exercise) => {
     // Convert Exercise to WorkoutExercise for the detail view
     const workoutExercise: WorkoutExercise = {
+      id: `workout_exercise_${Date.now()}`,
+      workout_session_id: `session_${Date.now()}`,
+      exercise_id: exercise.id,
       exercise: exercise,
-      completed: false
+      completed: false,
+      sets: [],
+      timers: []
     };
     setSelectedExercise(workoutExercise);
     setCurrentView('exercise-detail');
@@ -239,10 +246,171 @@ function App() {
             selectedDate={selectedDate}
           />
         );
+
+      case 'current-plan':
+        const today = new Date();
+        const todaysWorkout = calendarWorkouts.find(workout => 
+          workout.scheduled_date.toDateString() === today.toDateString()
+        );
+
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Today's Workout - {today.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </h2>
+              <Button
+                onClick={() => setCurrentView('calendar')}
+                variant="outline"
+                leftIcon={<Calendar size={16} />}
+              >
+                View Calendar
+              </Button>
+            </div>
+
+            {!todaysWorkout ? (
+              <Card className="text-center py-12">
+                <Target className="mx-auto text-gray-400 mb-4" size={48} />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No workout scheduled for today</h3>
+                <p className="text-gray-600 mb-6">
+                  Schedule a training plan for today to get started with your workout
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    onClick={() => setCurrentView('calendar')}
+                    leftIcon={<Calendar size={16} />}
+                  >
+                    Schedule Workout
+                  </Button>
+                  <Button
+                    onClick={() => setCurrentView('plans')}
+                    variant="outline"
+                    leftIcon={<Target size={16} />}
+                  >
+                    View Plans
+                  </Button>
+                </div>
+              </Card>
+            ) : todaysWorkout.training_plan ? (
+              <div className="space-y-4">
+                <Card>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {todaysWorkout.training_plan.name}
+                      </h3>
+                      {todaysWorkout.training_plan.description && (
+                        <p className="text-gray-600 mt-1">
+                          {todaysWorkout.training_plan.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        todaysWorkout.status === 'completed' 
+                          ? 'bg-green-100 text-green-800'
+                          : todaysWorkout.status === 'in_progress'
+                          ? 'bg-blue-100 text-blue-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {todaysWorkout.status === 'completed' ? 'Completed' : 
+                         todaysWorkout.status === 'in_progress' ? 'In Progress' : 'Scheduled'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {todaysWorkout.training_plan.exercises && (
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-900">
+                        Exercises ({todaysWorkout.training_plan.exercises.length})
+                      </h4>
+                      <div className="grid gap-3">
+                        {todaysWorkout.training_plan.exercises.map(exercise => (
+                          <Card key={exercise.id} className="bg-gray-50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h5 className="font-medium text-gray-900">{exercise.name}</h5>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(exercise.category)}`}>
+                                    {exercise.category}
+                                  </span>
+                                </div>
+                                <div className="flex gap-4 text-sm text-gray-600">
+                                  {exercise.sets && <span>Sets: {exercise.sets}</span>}
+                                  {exercise.reps && <span>Reps: {exercise.reps}</span>}
+                                  {exercise.weight && <span>Weight: {exercise.weight}kg</span>}
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleStartWorkout(exercise)}
+                                  leftIcon={<Clock size={14} />}
+                                >
+                                  Start
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+
+                {todaysWorkout.status !== 'completed' && (
+                  <Card>
+                    <div className="text-center py-6">
+                      <h4 className="font-semibold text-gray-900 mb-2">Ready to finish your workout?</h4>
+                      <p className="text-gray-600 mb-4">
+                        Complete all exercises to mark today's workout as finished
+                      </p>
+                      <Button
+                        onClick={() => {
+                          // Mark workout as completed
+                          const updatedWorkouts = calendarWorkouts.map(w => 
+                            w.id === todaysWorkout.id 
+                              ? { ...w, status: 'completed' as const }
+                              : w
+                          );
+                          setCalendarWorkouts(updatedWorkouts);
+                        }}
+                        size="lg"
+                        leftIcon={<Target size={16} />}
+                      >
+                        Complete Workout
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <Card className="text-center py-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Workout scheduled but no plan assigned
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  This workout doesn't have a training plan assigned to it yet.
+                </p>
+                <Button
+                  onClick={() => setCurrentView('calendar')}
+                  variant="outline"
+                >
+                  Edit in Calendar
+                </Button>
+              </Card>
+            )}
+          </div>
+        );
         
       case 'exercise-detail':
         if (!selectedExercise) {
-          setCurrentView('calendar');
+          setCurrentView('current-plan');
           return null;
         }
         return (
@@ -466,6 +634,7 @@ function App() {
           {/* Navigation Tabs */}
           <div className="flex gap-4">
             {[
+              { key: 'current-plan', label: "Today's Workout", icon: Dumbbell },
               { key: 'calendar', label: 'Calendar', icon: Calendar },
               { key: 'exercises', label: 'Exercises', icon: List },
               { key: 'plans', label: 'Plans', icon: Target },

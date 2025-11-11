@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -6,8 +6,7 @@ import {
   Calendar as CalendarIcon,
   CheckCircle,
   Circle,
-  Play,
-  MoreHorizontal
+  Play
 } from 'lucide-react';
 import { format, 
   startOfMonth, 

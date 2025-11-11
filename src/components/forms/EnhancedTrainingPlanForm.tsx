@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { X, Plus, Dumbbell } from 'lucide-react';
+import { X, Dumbbell } from 'lucide-react';
 import { TrainingPlan, Exercise } from '../../types';
 import { Button, Card } from '../ui';
-import { EXERCISE_CATEGORIES } from '../../config/constants';
+// import { EXERCISE_CATEGORIES } from '../../config/constants';
 
 interface EnhancedTrainingPlanFormProps {
   exercises: Exercise[];

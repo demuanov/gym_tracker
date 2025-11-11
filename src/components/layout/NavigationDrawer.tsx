@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
 import {
   Calendar,
   BarChart3,
   User,
-  Settings,
   Dumbbell,
-  TrendingUp,
   Trophy,
   Target,
   Clock,
@@ -13,13 +10,13 @@ import {
   X,
   LogOut
 } from 'lucide-react';
-import { Button, Card } from '../ui';
+import { Button } from '../ui';
 
 interface NavigationDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   user: any; // User from Supabase
-  onNavigate: (view: 'calendar' | 'statistics' | 'profile') => void;
+  onNavigate: (view: 'current-plan' | 'calendar' | 'statistics' | 'profile') => void;
   onSignOut: () => void;
   currentView: string;
   stats?: {
@@ -50,6 +47,12 @@ export default function NavigationDrawer({
 }: NavigationDrawerProps) {
   const navigationItems = [
     {
+      id: 'current-plan',
+      label: "Today's Workout",
+      icon: Dumbbell,
+      description: 'Current training plan for today'
+    },
+    {
       id: 'calendar',
       label: 'Calendar',
       icon: Calendar,
@@ -69,7 +72,7 @@ export default function NavigationDrawer({
     }
   ];
 
-  const handleNavigate = (view: 'calendar' | 'statistics' | 'profile') => {
+  const handleNavigate = (view: 'current-plan' | 'calendar' | 'statistics' | 'profile') => {
     onNavigate(view);
     onClose();
   };
