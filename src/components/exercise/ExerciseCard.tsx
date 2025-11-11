@@ -15,10 +15,10 @@ export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onE
 
   return (
     <Card className={`transition-all duration-200 ${exercise.completed ? 'bg-success-50 border-success-200' : ''}`} hover={!exercise.completed}>
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className={`font-semibold text-lg ${exercise.completed ? 'text-success-800 line-through' : 'text-gray-900'}`}>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <h3 className={`font-semibold text-base sm:text-lg ${exercise.completed ? 'text-success-800 line-through' : 'text-gray-900'}`}>
               {exercise.name}
             </h3>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(exercise.category)}`}>
@@ -26,7 +26,7 @@ export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onE
             </span>
           </div>
           
-          <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
+          <div className="flex flex-wrap gap-3 text-sm text-gray-600 mb-3">
             {exercise.sets && exercise.reps && (
               <div className="flex items-center gap-1">
                 <RotateCcw size={16} />
@@ -55,12 +55,12 @@ export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onE
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           {onStartWorkout && (
             <button
               onClick={() => onStartWorkout(exercise)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium bg-primary-100 text-primary-700 hover:bg-primary-200 transition-colors"
+              className="flex items-center justify-center gap-2 rounded-lg bg-primary-100 px-3 py-2 font-medium text-primary-700 hover:bg-primary-200 transition-colors w-full sm:w-auto"
             >
               <Clock size={16} />
               Start Workout
@@ -68,7 +68,7 @@ export default function ExerciseCard({ exercise, onToggleComplete, onDelete, onE
           )}
           <button
             onClick={() => onToggleComplete(exercise.id)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 font-medium transition-colors w-full sm:w-auto ${
               exercise.completed
                 ? 'bg-success-100 text-success-700 hover:bg-success-200'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'

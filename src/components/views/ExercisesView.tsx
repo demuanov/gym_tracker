@@ -23,27 +23,27 @@ export function ExercisesView({
 }: ExercisesViewProps) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Your Exercises</h2>
-        <Button onClick={onAddExercise} leftIcon={<Plus size={20} />}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Your Exercises</h2>
+        <Button onClick={onAddExercise} leftIcon={<Plus size={20} />} fullWidth className="sm:w-auto">
           Add Exercise
         </Button>
       </div>
 
       {loading ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-10">
           <Dumbbell className="mx-auto text-gray-400 mb-4 animate-pulse" size={48} />
           <p className="text-gray-600">Loading exercises...</p>
         </Card>
       ) : exercises.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-10">
           <Dumbbell className="mx-auto text-gray-400 mb-4" size={48} />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No exercises yet</h3>
           <p className="text-gray-600 mb-6">Start by adding your first exercise to track your workouts</p>
-          <Button onClick={onAddExercise}>Add Your First Exercise</Button>
+          <Button onClick={onAddExercise} fullWidth className="sm:w-auto">Add Your First Exercise</Button>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {exercises.map((exercise) => (
             <ExerciseCard
               key={exercise.id}

@@ -118,8 +118,8 @@ export default function CalendarView({
     <div className="space-y-6">
       {/* Calendar Header */}
       <Card>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 sm:text-xl">
             {format(currentMonth, 'MMMM yyyy')}
           </h2>
           <div className="flex gap-2">
@@ -143,66 +143,70 @@ export default function CalendarView({
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {/* Day Headers */}
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div
-              key={day}
-              className="p-2 text-center text-sm font-medium text-gray-500 border-b"
-            >
-              {day}
-            </div>
-          ))}
-
-          {/* Calendar Days */}
-          {days.map((day, index) => {
-            const workout = getWorkoutForDate(day);
-            const isCurrentMonth = isSameMonth(day, monthStart);
-            const isSelected = selectedDate && isSameDay(day, selectedDate);
-            const dayIsToday = isToday(day);
-
-            return (
-              <div
-                key={index}
-                onClick={() => handleDateClick(day)}
-                className={`
-                  min-h-[100px] p-2 border border-gray-200 cursor-pointer transition-colors
-                  ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400'}
-                  ${isSelected ? 'ring-2 ring-primary-500' : ''}
-                  ${dayIsToday ? 'bg-blue-50 border-blue-200' : ''}
-                `}
-              >
-                <div className="flex flex-col h-full">
-                  {/* Date Number */}
-                  <div className={`text-sm font-medium mb-1 ${dayIsToday ? 'text-blue-600' : ''}`}>
-                    {format(day, 'd')}
-                  </div>
-
-                  {/* Workout Indicator */}
-                  {workout && (
-                    <div className={`
-                      flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border
-                      ${getStatusColor(workout.status)}
-                    `}>
-                      {getStatusIcon(workout.status)}
-                      <span className="truncate">
-                        {workout.training_plan?.name || 'Workout'}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Add Workout Button for Empty Days */}
-                  {!workout && isCurrentMonth && (
-                    <div className="mt-auto">
-                      <div className="w-full h-6 rounded border-2 border-dashed border-gray-300 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                        <Plus size={12} className="text-gray-400" />
-                      </div>
-                    </div>
-                  )}
+        <div className="-mx-4 overflow-x-auto sm:mx-0">
+          <div className="min-w-[600px] px-4 sm:px-0">
+            <div className="grid grid-cols-7 gap-1">
+              {/* Day Headers */}
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div
+                  key={day}
+                  className="border-b p-2 text-center text-xs font-medium uppercase tracking-wide text-gray-500 sm:text-sm"
+                >
+                  {day}
                 </div>
-              </div>
-            );
-          })}
+              ))}
+
+              {/* Calendar Days */}
+              {days.map((day, index) => {
+                const workout = getWorkoutForDate(day);
+                const isCurrentMonth = isSameMonth(day, monthStart);
+                const isSelected = selectedDate && isSameDay(day, selectedDate);
+                const dayIsToday = isToday(day);
+
+                return (
+                  <div
+                    key={index}
+                    onClick={() => handleDateClick(day)}
+                    className={`
+                      min-h-[96px] cursor-pointer border border-gray-200 p-2 transition-colors
+                      ${isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 text-gray-400'}
+                      ${isSelected ? 'ring-2 ring-primary-500' : ''}
+                      ${dayIsToday ? 'bg-blue-50 border-blue-200' : ''}
+                    `}
+                  >
+                    <div className="flex h-full flex-col">
+                      {/* Date Number */}
+                      <div className={`mb-1 text-sm font-medium ${dayIsToday ? 'text-blue-600' : ''}`}>
+                        {format(day, 'd')}
+                      </div>
+
+                      {/* Workout Indicator */}
+                      {workout && (
+                        <div className={`
+                          flex items-center gap-1 rounded border px-2 py-1 text-xs font-medium
+                          ${getStatusColor(workout.status)}
+                        `}>
+                          {getStatusIcon(workout.status)}
+                          <span className="truncate">
+                            {workout.training_plan?.name || 'Workout'}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Add Workout Button for Empty Days */}
+                      {!workout && isCurrentMonth && (
+                        <div className="mt-auto">
+                          <div className="flex h-6 w-full items-center justify-center rounded border-2 border-dashed border-gray-300 opacity-0 transition-opacity hover:opacity-100">
+                            <Plus size={12} className="text-gray-400" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </Card>
 

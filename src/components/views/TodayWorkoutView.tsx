@@ -26,19 +26,19 @@ export function TodayWorkoutView({
 
   if (!todaysWorkout) {
     return (
-      <Card className="text-center py-12">
+      <Card className="text-center py-10">
         <Target className="mx-auto text-gray-400 mb-4" size={48} />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2 sm:text-xl">
           No workout scheduled for today
         </h3>
         <p className="text-gray-600 mb-6">
           Schedule a training plan for today to get started with your workout
         </p>
-        <div className="flex gap-3 justify-center">
-          <Button onClick={onNavigateToCalendar} leftIcon={<Calendar size={16} />}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <Button onClick={onNavigateToCalendar} leftIcon={<Calendar size={16} />} fullWidth className="sm:w-auto">
             Schedule Workout
           </Button>
-          <Button onClick={onNavigateToPlans} variant="outline" leftIcon={<Target size={16} />}>
+          <Button onClick={onNavigateToPlans} variant="outline" leftIcon={<Target size={16} />} fullWidth className="sm:w-auto">
             View Plans
           </Button>
         </div>
@@ -84,7 +84,7 @@ export function TodayWorkoutView({
         <p className="text-gray-600 mb-4">
           This workout doesn't have a training plan assigned to it yet.
         </p>
-        <Button onClick={onNavigateToCalendar} variant="outline">
+        <Button onClick={onNavigateToCalendar} variant="outline" fullWidth className="sm:w-auto">
           Edit in Calendar
         </Button>
       </Card>
@@ -94,9 +94,9 @@ export function TodayWorkoutView({
   return (
     <div className="space-y-4">
       <Card>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">
               {todaysWorkout.training_plan.name}
             </h3>
             {todaysWorkout.training_plan.description && (
@@ -105,7 +105,7 @@ export function TodayWorkoutView({
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2">{renderWorkoutStatus()}</div>
+          <div className="flex items-center gap-2 sm:justify-end">{renderWorkoutStatus()}</div>
         </div>
 
         {todaysWorkout.training_plan.exercises && (
@@ -116,9 +116,9 @@ export function TodayWorkoutView({
             <div className="grid gap-3">
               {todaysWorkout.training_plan.exercises.map((exercise) => (
                 <Card key={exercise.id} className="bg-gray-50">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <h5 className="font-medium text-gray-900">{exercise.name}</h5>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
@@ -128,14 +128,14 @@ export function TodayWorkoutView({
                           {exercise.category}
                         </span>
                       </div>
-                      <div className="flex gap-4 text-sm text-gray-600">
+                      <div className="flex flex-wrap gap-3 text-sm text-gray-600">
                         {exercise.sets && <span>Sets: {exercise.sets}</span>}
                         {exercise.reps && <span>Reps: {exercise.reps}</span>}
                         {exercise.weight && <span>Weight: {exercise.weight}kg</span>}
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={() => onStartWorkout(exercise)} leftIcon={<Clock size={14} />}>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <Button size="sm" onClick={() => onStartWorkout(exercise)} leftIcon={<Clock size={14} />} fullWidth className="sm:w-auto">
                         Start
                       </Button>
                     </div>
@@ -149,15 +149,17 @@ export function TodayWorkoutView({
 
       {todaysWorkout.status !== 'completed' && (
         <Card>
-          <div className="text-center py-6">
-            <h4 className="font-semibold text-gray-900 mb-2">Ready to finish your workout?</h4>
-            <p className="text-gray-600 mb-4">
+          <div className="space-y-4 text-center py-6">
+            <h4 className="text-lg font-semibold text-gray-900">Ready to finish your workout?</h4>
+            <p className="text-gray-600">
               Complete all exercises to mark today's workout as finished
             </p>
             <Button
               onClick={() => onCompleteWorkout(todaysWorkout.id)}
               size="lg"
               leftIcon={<Target size={16} />}
+              fullWidth
+              className="sm:w-auto"
             >
               Complete Workout
             </Button>

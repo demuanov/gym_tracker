@@ -491,14 +491,16 @@ function App() {
 
           return (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
                   Today's Workout - {formattedDate}
                 </h2>
                 <Button
                   onClick={() => navigateToView('calendar')}
                   variant="outline"
                   leftIcon={<Calendar size={16} />}
+                  fullWidth
+                  className="sm:w-auto"
                 >
                   View Calendar
                 </Button>
@@ -584,20 +586,24 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
       {/* Navigation Drawer */}
       <NavigationDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         user={user}
         onNavigate={handleNavigate}
+        onCreateExercise={() => {
+          setShowExerciseForm(true);
+          setIsDrawerOpen(false);
+        }}
         onSignOut={handleSignOut}
         currentView={currentView}
         stats={stats}
       />
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
+  <div className="flex-1 w-full lg:ml-0">
         {/* Mobile Top Bar */}
         <div className="bg-white border-b border-gray-200 px-4 py-3 lg:hidden">
           <div className="flex items-center justify-between">
@@ -632,7 +638,7 @@ function App() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex gap-4">
+          <div className="flex gap-2 xl:gap-4">
             {[
               { key: 'current-plan', label: "Today's Workout", icon: Dumbbell },
               { key: 'calendar', label: 'Calendar', icon: Calendar },
@@ -642,7 +648,7 @@ function App() {
               <button
                 key={key}
                 onClick={() => navigateToView(key as View, 'header_navigation')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 font-medium transition-colors sm:px-4 ${
                   currentView === key
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-700 hover:bg-gray-100'

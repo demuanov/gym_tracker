@@ -8,7 +8,8 @@ import {
   Clock,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Plus
 } from 'lucide-react';
 import { Button } from '../ui';
 
@@ -17,6 +18,7 @@ interface NavigationDrawerProps {
   onClose: () => void;
   user: any; // User from Supabase
   onNavigate: (view: 'current-plan' | 'calendar' | 'statistics' | 'profile') => void;
+  onCreateExercise: () => void;
   onSignOut: () => void;
   currentView: string;
   stats?: {
@@ -34,6 +36,7 @@ export default function NavigationDrawer({
   onClose,
   user,
   onNavigate,
+  onCreateExercise,
   onSignOut,
   currentView,
   stats = {
@@ -141,6 +144,19 @@ export default function NavigationDrawer({
                 <div className="text-lg font-bold text-blue-600">{stats.totalWorkouts}</div>
                 <div className="text-xs text-blue-700">Workouts</div>
               </div>
+            </div>
+
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">
+                Quick Actions
+              </h3>
+              <Button
+                onClick={onCreateExercise}
+                leftIcon={<Plus size={16} />}
+                fullWidth
+              >
+                Create Exercise
+              </Button>
             </div>
           </div>
 
