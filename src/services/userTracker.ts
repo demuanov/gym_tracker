@@ -1,4 +1,4 @@
-import { gymLogger } from './logger';
+import { gymLogger } from './optimizedLogger';
 
 // User interaction tracker for comprehensive UI logging
 class UserInteractionTracker {

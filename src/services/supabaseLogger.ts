@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { gymLogger, LogCategory } from './logger';
+import { gymLogger, LogCategory } from './optimizedLogger';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -149,7 +149,7 @@ export class LoggedSupabaseClient {
               (result) => {
                 const duration = selectTimer.end();
                 
-                gymLogger.logDatabaseAction(
+                gymLogger.logDatabaseOperation(
                   'SELECT',
                   table,
                   {
@@ -221,7 +221,7 @@ export class LoggedSupabaseClient {
               (result) => {
                 const duration = insertTimer.end();
                 
-                gymLogger.logDatabaseAction(
+                gymLogger.logDatabaseOperation(
                   'INSERT',
                   table,
                   {
@@ -293,7 +293,7 @@ export class LoggedSupabaseClient {
               (result) => {
                 const duration = updateTimer.end();
                 
-                gymLogger.logDatabaseAction(
+                gymLogger.logDatabaseOperation(
                   'UPDATE',
                   table,
                   {
@@ -357,7 +357,7 @@ export class LoggedSupabaseClient {
               (result) => {
                 const duration = deleteTimer.end();
                 
-                gymLogger.logDatabaseAction(
+                gymLogger.logDatabaseOperation(
                   'DELETE',
                   table,
                   {

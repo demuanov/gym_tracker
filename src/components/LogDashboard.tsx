@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { gymLogger, LogEntry } from '../services/logger';
+import { gymLogger, LogEntry } from '../services/lightweightLogger';
 import { Download, Trash2, RefreshCw, Eye, Search } from 'lucide-react';
 
 interface LogDashboardProps {

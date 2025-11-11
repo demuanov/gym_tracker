@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { Dumbbell, Plus, Calendar, List, Target, Clock } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useExercises } from './hooks/useExercises';
@@ -12,6 +12,7 @@ import {
   ExerciseSet,
   WorkoutExercise 
 } from './types';
+// Import components from index files for proper exports
 import { 
   AuthForm, 
   ExerciseForm, 
@@ -24,9 +25,11 @@ import {
   NavigationDrawer,
   DrawerToggle,
   Button,
-  Card,
-  LogDashboard
+  Card
 } from './components';
+
+// Lazy load LogDashboard since it's only used when explicitly requested
+const LogDashboard = lazy(() => import('./components/LogDashboard'));
 
 type View = 'exercises' | 'plans' | 'current-plan' | 'calendar' | 'exercise-detail' | 'statistics' | 'profile';
 
@@ -968,7 +971,7 @@ function App() {
       {selectedPlan && (
         <TrainingPlanView
           plan={selectedPlan}
-          onUpdatePlan={(updatedPlan) => {
+          onUpdatePlan={(updatedPlan: TrainingPlan) => {
             const updatedPlans = trainingPlans.map(p => p.id === updatedPlan.id ? updatedPlan : p);
             setTrainingPlans(updatedPlans);
           }}
@@ -992,16 +995,25 @@ function App() {
         />
       )}
 
-      {/* Log Dashboard - Accessible via Ctrl+Shift+L */}
+      {/* Log Dashboard - Accessible via Ctrl+Shift+L - Lazy loaded */}
       {showLogDashboard && (
-        <LogDashboard
-          onClose={() => {
-            setShowLogDashboard(false);
-            userTracker.trackFeatureUsage('admin', 'log_dashboard_closed', {
-              method: 'close_button'
-            });
-          }}
-        />
+        <Suspense fallback={
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 flex items-center gap-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <span className="text-gray-700">Loading Dashboard...</span>
+            </div>
+          </div>
+        }>
+          <LogDashboard
+            onClose={() => {
+              setShowLogDashboard(false);
+              userTracker.trackFeatureUsage('admin', 'log_dashboard_closed', {
+                method: 'close_button'
+              });
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );
