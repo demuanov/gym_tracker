@@ -9,6 +9,7 @@ export interface Exercise {
   notes?: string;
   completed: boolean;
   createdAt: Date;
+  sourceExerciseId?: string;
 }
 
 export interface ExerciseSet {

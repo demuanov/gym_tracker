@@ -35,6 +35,7 @@ export default function TrainingPlanForm({ exercises, onCreatePlan, onClose }: T
         return {
           ...originalExercise,
           id: `${originalExercise.id}-${currentDate.getTime()}`,
+          sourceExerciseId: originalExercise.id,
           completed: false,
           createdAt: new Date()
         };

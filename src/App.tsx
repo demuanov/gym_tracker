@@ -3,6 +3,7 @@ import { Dumbbell, Plus, Calendar, List, Target } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useExercises } from './hooks/useExercises';
+import { useTrainingPlans } from './hooks/useTrainingPlans';
 import { useWorkoutTimer } from './hooks/useWorkoutTimer';
 import { userTracker } from './services/userTracker';
 import { 
@@ -38,6 +39,12 @@ type View = 'exercises' | 'plans' | 'current-plan' | 'calendar' | 'exercise-deta
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { exercises, loading: exercisesLoading, addExercise, toggleExerciseComplete, deleteExercise } = useExercises();
+  const {
+    trainingPlans,
+    createPlan: persistTrainingPlan,
+    deletePlan: removeTrainingPlan,
+    updatePlanLocally,
+  } = useTrainingPlans();
   const {
     activeTimer,
     // currentTime,
@@ -98,7 +105,6 @@ function App() {
     navigate(targetPath);
   }, [currentView, navigate, viewToPath]);
 
-  const [trainingPlans, setTrainingPlans] = useState<TrainingPlan[]>([]);
   const [showExerciseForm, setShowExerciseForm] = useState(false);
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<TrainingPlan | null>(null);
@@ -210,55 +216,59 @@ function App() {
     }
   };
 
-  const createTrainingPlan = (planData: Omit<TrainingPlan, 'id'>) => {
-    // Track training plan creation
-    userTracker.trackFeatureUsage('training_plan', 'create_completed', {
-      planName: planData.name,
-      exerciseCount: planData.exercises?.length || 0,
-      category: planData.category
-    });
-    
-    const newPlan: TrainingPlan = {
-      ...planData,
-      id: Date.now().toString()
-    };
-    setTrainingPlans([...trainingPlans, newPlan]);
-    
-    // Track form completion
-    userTracker.trackFormInteraction('training_plan_form', 'completed', undefined, {
-      currentView,
-      success: true,
-      planName: planData.name
-    });
-    
-    setShowPlanForm(false);
+  const createTrainingPlan = async (planData: Omit<TrainingPlan, 'id'>) => {
+    try {
+      userTracker.trackFeatureUsage('training_plan', 'create_completed', {
+        planName: planData.name,
+        exerciseCount: planData.exercises?.length || 0,
+        category: planData.category
+      });
+
+      await persistTrainingPlan(planData);
+
+      userTracker.trackFormInteraction('training_plan_form', 'completed', undefined, {
+        currentView,
+        success: true,
+        planName: planData.name
+      });
+
+      setShowPlanForm(false);
+    } catch (error) {
+      console.error('Failed to create training plan:', error);
+      userTracker.trackError(error as Error, 'TRAINING_PLAN_CREATE', {
+        planName: planData.name,
+        exerciseCount: planData.exercises?.length || 0
+      });
+    }
   };
 
   // New enhanced handlers
-  const createEnhancedTrainingPlan = (planData: Omit<TrainingPlan, 'id'>) => {
-    // Track enhanced training plan creation
-    userTracker.trackFeatureUsage('training_plan', 'create_enhanced_completed', {
-      planName: planData.name,
-      exerciseCount: planData.exercises?.length || 0,
-      category: planData.category,
-      isEnhanced: true
-    });
-    
-    const newPlan: TrainingPlan = {
-      ...planData,
-      id: Date.now().toString()
-    };
-    setTrainingPlans([...trainingPlans, newPlan]);
-    
-    // Track enhanced form completion
-    userTracker.trackFormInteraction('enhanced_training_plan_form', 'completed', undefined, {
-      currentView,
-      success: true,
-      planName: planData.name,
-      isEnhanced: true
-    });
-    
-    setShowEnhancedPlanForm(false);
+  const createEnhancedTrainingPlan = async (planData: Omit<TrainingPlan, 'id'>) => {
+    try {
+      userTracker.trackFeatureUsage('training_plan', 'create_enhanced_completed', {
+        planName: planData.name,
+        exerciseCount: planData.exercises?.length || 0,
+        category: planData.category,
+        isEnhanced: true
+      });
+
+      await persistTrainingPlan(planData);
+
+      userTracker.trackFormInteraction('enhanced_training_plan_form', 'completed', undefined, {
+        currentView,
+        success: true,
+        planName: planData.name,
+        isEnhanced: true
+      });
+
+      setShowEnhancedPlanForm(false);
+    } catch (error) {
+      console.error('Failed to create enhanced training plan:', error);
+      userTracker.trackError(error as Error, 'ENHANCED_TRAINING_PLAN_CREATE', {
+        planName: planData.name,
+        exerciseCount: planData.exercises?.length || 0
+      });
+    }
   };
 
   const handleNavigate = (view: View) => {
@@ -424,14 +434,20 @@ function App() {
   };
 
   const updateTrainingPlan = (updatedPlan: TrainingPlan) => {
-    setTrainingPlans(trainingPlans.map(plan =>
-      plan.id === updatedPlan.id ? updatedPlan : plan
-    ));
+    updatePlanLocally(updatedPlan);
     setSelectedPlan(updatedPlan);
   };
 
-  const deletePlan = (id: string) => {
-    setTrainingPlans(trainingPlans.filter(plan => plan.id !== id));
+  const deletePlan = async (id: string) => {
+    try {
+      await removeTrainingPlan(id);
+      if (selectedPlan?.id === id) {
+        setSelectedPlan(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete training plan:', error);
+      userTracker.trackError(error as Error, 'TRAINING_PLAN_DELETE', { planId: id });
+    }
   };
 
 
@@ -678,10 +694,7 @@ function App() {
       {selectedPlan && (
         <TrainingPlanView
           plan={selectedPlan}
-          onUpdatePlan={(updatedPlan: TrainingPlan) => {
-            const updatedPlans = trainingPlans.map(p => p.id === updatedPlan.id ? updatedPlan : p);
-            setTrainingPlans(updatedPlans);
-          }}
+          onUpdatePlan={updateTrainingPlan}
           onBack={() => setSelectedPlan(null)}
         />
       )}
